@@ -459,7 +459,7 @@ void Cell_info::OutputEvolutionDataXYEta_chun(SCGrid &arena,
     const double output_etamin = - DATA.eta_size/2.;
 
     if (tau == DATA.tau0) {
-        const int nVar_per_cell = (10 + DATA.turn_on_rhob*1
+        const int nVar_per_cell = (11 + DATA.turn_on_rhob*2
                                       + DATA.turn_on_shear*5
                                       + DATA.turn_on_bulk*1
                                       + DATA.turn_on_diff*3);
@@ -484,6 +484,7 @@ void Cell_info::OutputEvolutionDataXYEta_chun(SCGrid &arena,
                 double e_local    = arena(ix, iy, ieta).epsilon;  // 1/fm^4
                 double rhob_local = arena(ix, iy, ieta).rhob;     // 1/fm^3
                 double p_local    = eos.get_pressure(e_local, rhob_local);
+                double cs2        = eos.get_cs2(e_local, rhob_local);
 
                 double ux   = arena(ix, iy, ieta).u[1];
                 double uy   = arena(ix, iy, ieta).u[2];
@@ -539,15 +540,17 @@ void Cell_info::OutputEvolutionDataXYEta_chun(SCGrid &arena,
                                  static_cast<float>(e_local*hbarc),
                                  static_cast<float>(p_local*hbarc),
                                  static_cast<float>(T_local*hbarc),
+                                 static_cast<float>(cs2),
                                  static_cast<float>(ux),
                                  static_cast<float>(uy),
                                  static_cast<float>(ueta)};
 
-                fwrite(ideal, sizeof(float), 10, out_file_xyeta);
+                fwrite(ideal, sizeof(float), 11, out_file_xyeta);
 
                 if (DATA.turn_on_rhob == 1) {
-                    float mu[] = {static_cast<float>(muB_local*hbarc)};
-                    fwrite(mu, sizeof(float), 1, out_file_xyeta);
+                    float mu[] = {static_cast<float>(rhob_local),
+                                  static_cast<float>(muB_local*hbarc)};
+                    fwrite(mu, sizeof(float), 2, out_file_xyeta);
                 }
 
                 if (DATA.turn_on_shear == 1) {
@@ -1259,10 +1262,13 @@ void Cell_info::output_average_phase_diagram_trajectory(
     ostringstream filename;
     filename << "averaged_phase_diagram_trajectory_eta_" << eta_min
              << "_" << eta_max << ".dat";
-    std::fstream of(filename.str().c_str(), std::fstream::app | std::fstream::out);
+    std::fstream of;
     if (fabs(tau - DATA.tau0) < 1e-10) {
+        of.open(filename.str().c_str(), std::fstream::out);
         of << "# tau(fm)  <T>(GeV)  std(T)(GeV)  <mu_B>(GeV)  std(mu_B)(GeV)  "
            << "V4 (fm^4)" << endl;
+    } else {
+        of.open(filename.str().c_str(), std::fstream::app);
     }
     double avg_T  = 0.0;
     double avg_mu = 0.0;
