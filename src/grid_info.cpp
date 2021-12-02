@@ -1257,7 +1257,7 @@ double Cell_info::get_deltaf_coeff_14moments(double T, double muB,
 
 //! This function outputs average T and mu_B as a function of proper tau
 //! within a given space-time rapidity range
-void Cell_info::output_average_phase_diagram_trajectory(
+void Cell_info::output_average_phase_diagram_trajectory_longitudinal(
                 double tau, double eta_min, double eta_max, SCGrid &arena) {
     ostringstream filename;
     filename << "averaged_phase_diagram_trajectory_eta_" << eta_min
@@ -1316,6 +1316,77 @@ void Cell_info::output_average_phase_diagram_trajectory(
     of.close();
 }
 
+//! This function outputs average T and mu_B as a function of proper tau
+//! within a given transverse range
+void Cell_info::output_average_phase_diagram_trajectory_transverse(
+                double tau, double x_min, double x_max, double y_min, double y_max, SCGrid &arena) {
+    ostringstream filename;
+    filename << "averaged_phase_diagram_trajectory_x_" << x_min
+             << "_" << x_max << "_y_" << y_min
+             << "_" << y_max <<".dat";
+    std::fstream of;
+    if (fabs(tau - DATA.tau0) < 1e-10) {
+        of.open(filename.str().c_str(), std::fstream::out);
+        of << "# tau(fm)  <T>(GeV)  std(T)(GeV)  <mu_B>(GeV)  std(mu_B)(GeV)  "
+           << "V4 (fm^4)" << endl;
+    } else {
+        of.open(filename.str().c_str(), std::fstream::app);
+    }
+    double avg_T  = 0.0;
+    double avg_mu = 0.0;
+    double std_T  = 0.0;
+    double std_mu = 0.0;
+    double weight = 0.0;
+    double V4     = 0.0;
+    const double unit_volume = tau*DATA.delta_x*DATA.delta_y*DATA.delta_eta;
+    
+    for (int ieta = 0; ieta < arena.nEta(); ieta++) {
+        double eta = 0.0;
+        if (DATA.boost_invariant == 0) {
+            eta = ((static_cast<double>(ieta))*(DATA.delta_eta)
+                    - (DATA.eta_size)/2.0);
+        }
+        
+        // only average over cells at positive space-time rapidity
+        if (eta > 0.) {
+            for (int iy = 0; iy < arena.nY(); iy++){
+                double y = - DATA.y_size/2. + iy*DATA.delta_y;
+                if (y < y_max && y > y_min) {
+                    for (int ix = 0; ix < arena.nX(); ix++) {
+                        double x = - DATA.x_size/2. + ix*DATA.delta_x;
+                        if (x < x_max && x > x_min) {
+                            double cosh_eta = cosh(eta);
+                            double sinh_eta = sinh(eta);
+                            double e_local      = arena(ix, iy, ieta).epsilon;  // 1/fm^4
+                            if (e_local > 0.16/hbarc)
+                                V4 += unit_volume;
+                            double rhob_local   = arena(ix, iy, ieta).rhob;     // 1/fm^3
+                            double utau         = arena(ix, iy, ieta).u[0];
+                            double ueta         = arena(ix, iy, ieta).u[3];
+                            double ut           = utau*cosh_eta + ueta*sinh_eta;  // gamma factor
+                            double T_local      = eos.get_temperature(e_local, rhob_local);
+                            double muB_local    = eos.get_muB(e_local, rhob_local);
+                            double weight_local = e_local*ut;
+                            avg_T  += T_local*weight_local;
+                            avg_mu += muB_local*weight_local;
+                            std_T  += T_local*T_local*weight_local;
+                            std_mu += muB_local*muB_local*weight_local;
+                            weight += weight_local;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    avg_T  = avg_T/(weight + 1e-15)*hbarc;
+    avg_mu = avg_mu/(weight + 1e-15)*hbarc;
+    std_T  = sqrt(std_T/(weight + 1e-15)*hbarc*hbarc - avg_T*avg_T);
+    std_mu = sqrt(std_mu/(weight + 1e-15)*hbarc*hbarc - avg_mu*avg_mu);
+    of << scientific << setw(18) << setprecision(8)
+       << tau << "  " << avg_T << "  " << std_T << "  "
+       << avg_mu << "  " << std_mu << "  " << V4 << endl;
+    of.close();
+}
 
 //! This function outputs system's momentum anisotropy as a function of tau
 void Cell_info::output_momentum_anisotropy_vs_tau(

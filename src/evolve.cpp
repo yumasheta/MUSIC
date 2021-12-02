@@ -132,16 +132,48 @@ int Evolve::EvolveIt(SCGrid &arena_prev, SCGrid &arena_current,
         grid_info.output_momentum_anisotropy_vs_tau(
                                             tau, -0.5, 0.5, *ap_current);
         if (DATA.Initial_profile == 11 || DATA.Initial_profile == 13) {
-            grid_info.output_average_phase_diagram_trajectory(
+            // average trajectories at different space-time rapidities
+            grid_info.output_average_phase_diagram_trajectory_longitudinal(
                                             tau, -0.5, 0.5, *ap_current);
-            grid_info.output_average_phase_diagram_trajectory(
-                                            tau, 0.5, 2.0, *ap_current);
-            grid_info.output_average_phase_diagram_trajectory(
-                                            tau, 2.0, 3.0, *ap_current);
-            grid_info.output_average_phase_diagram_trajectory(
-                                            tau, 3.0, 4.0, *ap_current);
-            grid_info.output_average_phase_diagram_trajectory(
-                                            tau, 4.0, 5.0, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_longitudinal(
+                                            tau, 0.5, 1.0, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_longitudinal(
+                                            tau, 1.0, 1.5, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_longitudinal(
+                                            tau, 1.5, 2.0, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_longitudinal(
+                                            tau, 2.0, 2.5, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_longitudinal(
+                                            tau, 2.5, 3.0, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_longitudinal(
+                                            tau, 3.0, 3.5, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_longitudinal(
+                                            tau, 3.5, 4.0, *ap_current);
+            
+            // average trajectories at different transverse locations
+            
+            /* along x axis */
+            grid_info.output_average_phase_diagram_trajectory_transverse(
+                                            tau, 0.0, 1.0, -0.2, 0.2, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_transverse(
+                                            tau, 1.0, 2.0, -0.2, 0.2, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_transverse(
+                                            tau, 2.0, 3.0, -0.2, 0.2, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_transverse(
+                                            tau, 3.0, 4.0, -0.2, 0.2, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_transverse(
+                                            tau, 4.0, 5.0, -0.2, 0.2, *ap_current);
+            /* along y axis */
+            grid_info.output_average_phase_diagram_trajectory_transverse(
+                                            tau, -0.2, 0.2, 0.0, 1.0, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_transverse(
+                                            tau, -0.2, 0.2, 1.0, 2.0, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_transverse(
+                                            tau, -0.2, 0.2, 2.0, 3.0, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_transverse(
+                                            tau, -0.2, 0.2, 3.0, 4.0, *ap_current);
+            grid_info.output_average_phase_diagram_trajectory_transverse(
+                                            tau, -0.2, 0.2, 4.0, 5.0, *ap_current);
         }
 
         // check energy conservation

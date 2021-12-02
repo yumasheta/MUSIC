@@ -1021,14 +1021,14 @@ double Init::eta_rhob_left_factor(double eta) {
     double tau0        = DATA.tau0;
     double delta_eta_1 = DATA.eta_rhob_width_1;
     double delta_eta_2 = DATA.eta_rhob_width_2;
-    double norm        = 2./(sqrt(M_PI)*tau0*(delta_eta_1 + delta_eta_2));
+    double norm        = 2./(sqrt(2.*M_PI)*tau0*(delta_eta_1 + delta_eta_2));
     double exp_arg     = 0.0;
     if (eta < eta_0) {
         exp_arg = (eta - eta_0)/delta_eta_1;
     } else {
         exp_arg = (eta - eta_0)/delta_eta_2;
     }
-    double res = norm*exp(-exp_arg*exp_arg);
+    double res = norm*exp(-exp_arg*exp_arg/2.);
     return(res);
 }
 
@@ -1037,14 +1037,14 @@ double Init::eta_rhob_right_factor(double eta) {
     double tau0        = DATA.tau0;
     double delta_eta_1 = DATA.eta_rhob_width_1;
     double delta_eta_2 = DATA.eta_rhob_width_2;
-    double norm        = 2./(sqrt(M_PI)*tau0*(delta_eta_1 + delta_eta_2));
+    double norm        = 2./(sqrt(2.*M_PI)*tau0*(delta_eta_1 + delta_eta_2));
     double exp_arg     = 0.0;
     if (eta < eta_0) {
         exp_arg = (eta - eta_0)/delta_eta_2;
     } else {
         exp_arg = (eta - eta_0)/delta_eta_1;
     }
-    double res = norm*exp(-exp_arg*exp_arg);
+    double res = norm*exp(-exp_arg*exp_arg/2.);
     return(res);
 }
 
@@ -1054,9 +1054,9 @@ void Init::output_initial_density_profiles(SCGrid &arena) {
     // for checking purpose
     music_message.info("output initial density profiles into a file... ");
     std::ofstream of("check_initial_density_profiles.dat");
-    of << "# x(fm)  y(fm)  eta  ed(GeV/fm^3)";
+    of << "# x(fm)  y(fm)  eta  utau  ueta(1/fm)  ed(GeV/fm^3)  T(GeV)";
     if (DATA.turn_on_rhob == 1)
-        of << "  rhob(1/fm^3)";
+        of << "  rhob(1/fm^3)  mu(GeV)";
     of << std::endl;
     for (int ieta = 0; ieta < arena.nEta(); ieta++) {
         double eta_local = (DATA.delta_eta)*ieta - (DATA.eta_size)/2.0;
@@ -1064,11 +1064,21 @@ void Init::output_initial_density_profiles(SCGrid &arena) {
             double x_local = -DATA.x_size/2. + ix*DATA.delta_x;
             for(int iy = 0; iy < arena.nY(); iy++) {
                 double y_local = -DATA.y_size/2. + iy*DATA.delta_y;
+                double e_local = arena(ix,iy,ieta).epsilon;
+                double rhob_local = arena(ix,iy,ieta).rhob;
+                double utau         = arena(ix, iy, ieta).u[0];
+                double ueta         = arena(ix, iy, ieta).u[3];
+                double T_local      = eos.get_temperature(e_local, rhob_local);
+                double muB_local    = eos.get_muB(e_local, rhob_local);
+
                 of << std::scientific << std::setw(18) << std::setprecision(8)
                    << x_local << "   " << y_local << "   "
-                   << eta_local << "   " << arena(ix,iy,ieta).epsilon*hbarc;
+                   << eta_local << "   " << utau << "   " 
+                   << ueta << "   " << e_local*hbarc
+                   << "   " << T_local*hbarc;
                 if (DATA.turn_on_rhob == 1) {
-                    of << "   " << arena(ix,iy,ieta).rhob;
+                    of << "   " << rhob_local
+                    << "   " << muB_local*hbarc;
                 }
                 of << std::endl;
             }

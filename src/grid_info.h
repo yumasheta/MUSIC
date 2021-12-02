@@ -91,8 +91,13 @@ class Cell_info {
 
     //! This function outputs average T and mu_B as a function of proper tau
     //! within a given space-time rapidity range
-    void output_average_phase_diagram_trajectory(
+    void output_average_phase_diagram_trajectory_longitudinal(
                 double tau, double eta_min, double eta_max, SCGrid &arena);
+    
+    //! This function outputs average T and mu_B as a function of proper tau
+    //! within a given transverse range
+    void output_average_phase_diagram_trajectory_transverse(
+                double tau, double x_min, double x_max, double y_min, double y_max, SCGrid &arena);
 
     //! This function dumps the energy density and net baryon density
     void output_energy_density_and_rhob_disitrubtion(SCGrid &arena,
