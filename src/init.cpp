@@ -695,6 +695,7 @@ void Init::initial_MCGlb_with_rhob(SCGrid &arena_prev, SCGrid &arena_current) {
                     rhob = (
                         (temp_profile_rhob_TA[ix][iy]*eta_rhob_left
                          + temp_profile_rhob_TB[ix][iy]*eta_rhob_right));
+                    rhob = DATA.rhobNorm * rhob; // a factor tuning net baryon
                 } else {
                     rhob = 0.0;
                 }
@@ -710,6 +711,7 @@ void Init::initial_MCGlb_with_rhob(SCGrid &arena_prev, SCGrid &arena_current) {
                         *DATA.sFactor);         // 1/fm^3
                     epsilon = eos.get_s2e(local_sd, rhob);
                 }
+                epsilon = DATA.eNorm * epsilon;  // a factor tuning net energy
                 epsilon = std::max(1e-12, epsilon);
 
                 arena_current(ix, iy, ieta).epsilon = epsilon;

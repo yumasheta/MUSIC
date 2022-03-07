@@ -435,6 +435,18 @@ InitData read_in_parameters(std::string input_file) {
     if (tempinput != "empty") istringstream ( tempinput ) >> tempsFactor;
     parameter_list.sFactor   = tempsFactor;
 
+    double tempeNorm   = 1.0;
+    tempinput = Util::StringFind4(input_file, "e_Norm");
+    if (tempinput != "empty")
+        istringstream ( tempinput ) >> tempeNorm;
+    parameter_list.eNorm = tempeNorm;
+
+    double temprhobNorm   = 1.0;
+    tempinput = Util::StringFind4(input_file, "rhob_Norm");
+    if (tempinput != "empty")
+        istringstream ( tempinput ) >> temprhobNorm;
+    parameter_list.rhobNorm = temprhobNorm;
+
     // for calculation of spectra:
     // max_pseudorapidity:
     // spectra calculated from zero to this pseudorapidity in +eta and -eta
