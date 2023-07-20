@@ -838,18 +838,32 @@ void Init::initial_MCGlb_with_rhob(SCGrid &arena_prev, SCGrid &arena_current) {
     double temp_profile_TB[nx][ny];
     double temp_profile_rhob_TA[nx][ny];
     double temp_profile_rhob_TB[nx][ny];
+    double N_B = 0.0;
     for (int i = 0; i < nx; i++) {
         for (int j = 0; j < ny; j++) {
             profile_TA >> temp_profile_TA[i][j];
             profile_TB >> temp_profile_TB[i][j];
             profile_rhob_TA >> temp_profile_rhob_TA[i][j];
             profile_rhob_TB >> temp_profile_rhob_TB[i][j];
+            N_B += temp_profile_TA[i][j] + temp_profile_TB[i][j];
         }
     }
     profile_TA.close();
     profile_TB.close();
     profile_rhob_TA.close();
     profile_rhob_TB.close();
+    N_B *= DATA.delta_x*DATA.delta_y;
+    double total_energy = DATA.ecm/2.*N_B;
+    music_message << "sqrt{s} = " << DATA.ecm << " GeV, "
+                  << "beam rapidity = " << DATA.beam_rapidity;
+    music_message.flush("info");
+    music_message << "From TA & TB: total energy = " << total_energy << " GeV, "
+                  << "N_B = " << N_B;
+    music_message.flush("info");
+    music_message << "rhobNorm = " << DATA.rhobNorm << ", "
+                  << "total adjusted baryon = " << N_B * DATA.rhobNorm << ", "
+                  << "total adjusted energy = " << total_energy * DATA.rhobNorm;
+    music_message.flush("info");
 
     int entropy_flag = DATA.initializeEntropy;
 
