@@ -112,9 +112,10 @@ void Init::InitArena(SCGrid &arena_prev, SCGrid &arena_current,
         ifstream profile(DATA.initName.c_str());
         std::string dummy;
         int nx, ny, neta;
-        double deta, dx, dy, dummy2;
+        double deta, dx, dy;
         // read the first line with general info
-        profile >> dummy >> neta >> dummy >> nx >> dummy >> ny
+        profile >> dummy
+                >> dummy >> neta >> dummy >> nx >> dummy >> ny
                 >> dummy >> deta >> dummy >> dx >> dummy >> dy;
         profile.close();
         music_message << "Using Initial_profile=" << DATA.Initial_profile
