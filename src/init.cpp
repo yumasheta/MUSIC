@@ -762,7 +762,7 @@ void Init::initial_IPGlasma_XY_with_pi_3D(SCGrid &arena_prev,
     std::vector<double> temp_profile_pietaeta(nx*ny, 0.0);
 
     // read the one slice
-    double density, dummy1, dummy2, dummy3;
+    double density, eta_0, x_0, y_0;
     double ux, uy, utau, ueta;
     double pitautau, pitaux, pitauy, pitaueta;
     double pixx, pixy, pixeta, piyy, piyeta, pietaeta;
@@ -771,7 +771,7 @@ void Init::initial_IPGlasma_XY_with_pi_3D(SCGrid &arena_prev,
             int idx = iy + ix*ny;
             std::getline(profile, dummy);
             std::stringstream ss(dummy);
-            ss >> dummy1 >> dummy2 >> dummy3
+            ss >> eta_0 >> x_0 >> y_0
                >> density >> utau >> ux >> uy >> ueta
                >> pitautau >> pitaux >> pitauy >> pitaueta
                >> pixx >> pixy >> pixeta >> piyy >> piyeta >> pietaeta;
@@ -812,8 +812,8 @@ void Init::initial_IPGlasma_XY_with_pi_3D(SCGrid &arena_prev,
                   + temp_profile_pitauy[idx]*uy
                   + temp_profile_pitaueta[idx]*ueta));
             if (ix == 0 && iy == 0) {
-                DATA.x_size = -dummy1*2;
-                DATA.y_size = -dummy2*2;
+                DATA.x_size = -x_0*2;
+                DATA.y_size = -y_0*2;
                 if (omp_get_thread_num() == 0) {
                     music_message << "eta_size=" << DATA.eta_size
                                   << ", x_size=" << DATA.x_size
