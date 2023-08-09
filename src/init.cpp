@@ -822,7 +822,6 @@ void Init::initial_IPGlasma_XY_with_pi_3D(SCGrid &arena_prev,
                 }
             }
         }
-        std::getline(profile, dummy);
     }
     profile.close();
 
