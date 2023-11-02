@@ -59,6 +59,7 @@ class Init {
     void initial_MCGlb_with_rhob         (SCGrid &arena_prev, SCGrid &arena_current);
     void initial_UMN_with_rhob           (SCGrid &arena_prev, SCGrid & arena_current);
     void initial_with_jetscape           (int ieta, SCGrid &arena_prev, SCGrid &arena_current);
+    void initial_with_smash              (SCGrid &arena_prev, SCGrid &arena_current);
 
     void get_jetscape_preequilibrium_vectors(
         std::vector<double> e_in, std::vector<double> P_in,
