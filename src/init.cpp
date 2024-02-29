@@ -73,7 +73,7 @@ void Init::InitArena(SCGrid &arena_prev, SCGrid &arena_current,
         DATA.delta_x = dx;
         DATA.delta_y = dy;
 
-        music_message << "neta=" << neta << ", nx=" << nx << ", ny=" << ny;
+        music_message << "neta=" << DATA.neta << ", nx=" << nx << ", ny=" << ny;
         music_message << "deta=" << DATA.delta_eta << ", dx=" << DATA.delta_x
                       << ", dy=" << DATA.delta_y;
         music_message.flush("info");
