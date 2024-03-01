@@ -110,6 +110,12 @@ void Init::InitArena(SCGrid &arena_prev, SCGrid &arena_current,
     } else if (DATA.Initial_profile == 93) {
         music_message.info(DATA.initName);
         ifstream profile(DATA.initName.c_str());
+        if (!profile.is_open()) {
+            music_message << "Initial profile: " << DATA.initName
+                          << " not found.";
+            music_message.flush("error");
+            exit(1);
+        }
         std::string dummy;
         int nx, ny, neta;
         double deta, dx, dy;
@@ -122,8 +128,10 @@ void Init::InitArena(SCGrid &arena_prev, SCGrid &arena_current,
                       << ". Overwriting lattice dimensions (in transverse plane):";
         DATA.nx = nx;
         DATA.ny = ny;
+        DATA.neta = neta;
         DATA.delta_x = dx;
         DATA.delta_y = dy;
+        DATA.delta_eta = deta;
 
         music_message << "neta=" << DATA.neta << ", nx=" << DATA.nx << ", ny=" << DATA.ny;
         music_message << ", deta=" << DATA.delta_eta << ", dx=" << DATA.delta_x
@@ -250,7 +258,7 @@ void Init::InitTJb(SCGrid &arena_prev, SCGrid &arena_current) {
     } else if (DATA.Initial_profile == 93) {
         // read in the profile from file
         // - IPGlasma initial conditions with initial flow
-        // and initial shear viscous tensor
+        // and initial shear viscous tensor in 3D (eta_s, x, y)
         music_message.info(" ----- information on initial distribution -----");
         music_message << "file name used: " << DATA.initName;
         music_message.flush("info");
@@ -745,79 +753,81 @@ void Init::initial_IPGlasma_XY_with_pi_3D(SCGrid &arena_prev,
 
     const int nx = arena_current.nX();
     const int ny = arena_current.nY();
-    std::vector<double> temp_profile_ed(nx*ny, 0.0);
-    std::vector<double> temp_profile_utau(nx*ny, 0.0);
-    std::vector<double> temp_profile_ux(nx*ny, 0.0);
-    std::vector<double> temp_profile_uy(nx*ny, 0.0);
-    std::vector<double> temp_profile_ueta(nx*ny, 0.0);
-    std::vector<double> temp_profile_pitautau(nx*ny, 0.0);
-    std::vector<double> temp_profile_pitaux(nx*ny, 0.0);
-    std::vector<double> temp_profile_pitauy(nx*ny, 0.0);
-    std::vector<double> temp_profile_pitaueta(nx*ny, 0.0);
-    std::vector<double> temp_profile_pixx(nx*ny, 0.0);
-    std::vector<double> temp_profile_pixy(nx*ny, 0.0);
-    std::vector<double> temp_profile_pixeta(nx*ny, 0.0);
-    std::vector<double> temp_profile_piyy(nx*ny, 0.0);
-    std::vector<double> temp_profile_piyeta(nx*ny, 0.0);
-    std::vector<double> temp_profile_pietaeta(nx*ny, 0.0);
+    const int neta = arena_current.nEta();
+    std::vector<double> temp_profile_ed(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_utau(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_ux(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_uy(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_ueta(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_pitautau(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_pitaux(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_pitauy(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_pitaueta(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_pixx(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_pixy(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_pixeta(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_piyy(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_piyeta(nx*ny*neta, 0.0);
+    std::vector<double> temp_profile_pietaeta(nx*ny*neta, 0.0);
 
-    // read the one slice
-    double density, eta_0, x_0, y_0;
+    // read all eta slices
+    double density, eta, x, y;
     double ux, uy, utau, ueta;
     double pitautau, pitaux, pitauy, pitaueta;
     double pixx, pixy, pixeta, piyy, piyeta, pietaeta;
-    for (int ix = 0; ix < nx; ix++) {
-        for (int iy = 0; iy < ny; iy++) {
-            int idx = iy + ix*ny;
-            std::getline(profile, dummy);
-            std::stringstream ss(dummy);
-            ss >> eta_0 >> x_0 >> y_0
-               >> density >> utau >> ux >> uy >> ueta
-               >> pitautau >> pitaux >> pitauy >> pitaueta
-               >> pixx >> pixy >> pixeta >> piyy >> piyeta >> pietaeta;
-            ueta = ueta*tau0;
-            temp_profile_ed    [idx] = density;
-            temp_profile_ux    [idx] = ux;
-            temp_profile_uy    [idx] = uy;
-            temp_profile_ueta  [idx] = ueta;
-            temp_profile_utau  [idx] = sqrt(1. + ux*ux + uy*uy + ueta*ueta);
-            temp_profile_pixx  [idx] = pixx*DATA.sFactor;
-            temp_profile_pixy  [idx] = pixy*DATA.sFactor;
-            temp_profile_pixeta[idx] = pixeta*tau0*DATA.sFactor;
-            temp_profile_piyy  [idx] = piyy*DATA.sFactor;
-            temp_profile_piyeta[idx] = piyeta*tau0*DATA.sFactor;
+    for (int ieta = 0; ieta < neta; ieta++) {
+        for (int ix = 0; ix < nx; ix++) {
+            for (int iy = 0; iy < ny; iy++) {
+                int idx = iy + ix*ny + ieta*ny*nx;
+                std::getline(profile, dummy);
+                std::stringstream ss(dummy);
+                ss >> eta >> x >> y
+                >> density >> utau >> ux >> uy >> ueta
+                >> pitautau >> pitaux >> pitauy >> pitaueta
+                >> pixx >> pixy >> pixeta >> piyy >> piyeta >> pietaeta;
+                ueta = ueta*tau0;
+                temp_profile_ed    [idx] = density;
+                temp_profile_ux    [idx] = ux;
+                temp_profile_uy    [idx] = uy;
+                temp_profile_ueta  [idx] = ueta;
+                temp_profile_utau  [idx] = sqrt(1. + ux*ux + uy*uy + ueta*ueta);
+                temp_profile_pixx  [idx] = pixx*DATA.sFactor;
+                temp_profile_pixy  [idx] = pixy*DATA.sFactor;
+                temp_profile_pixeta[idx] = pixeta*tau0*DATA.sFactor;
+                temp_profile_piyy  [idx] = piyy*DATA.sFactor;
+                temp_profile_piyeta[idx] = piyeta*tau0*DATA.sFactor;
 
-            utau = temp_profile_utau[idx];
-            temp_profile_pietaeta[idx] = (
-                (2.*(  ux*uy*temp_profile_pixy[idx]
-                     + ux*ueta*temp_profile_pixeta[idx]
-                     + uy*ueta*temp_profile_piyeta[idx])
-                 - (utau*utau - ux*ux)*temp_profile_pixx[idx]
-                 - (utau*utau - uy*uy)*temp_profile_piyy[idx])
-                /(utau*utau - ueta*ueta));
-            temp_profile_pitaux  [idx] = (1./utau
-                *(  temp_profile_pixx[idx]*ux
-                  + temp_profile_pixy[idx]*uy
-                  + temp_profile_pixeta[idx]*ueta));
-            temp_profile_pitauy  [idx] = (1./utau
-                *(  temp_profile_pixy[idx]*ux
-                  + temp_profile_piyy[idx]*uy
-                  + temp_profile_piyeta[idx]*ueta));
-            temp_profile_pitaueta[idx] = (1./utau
-                *(  temp_profile_pixeta[idx]*ux
-                  + temp_profile_piyeta[idx]*uy
-                  + temp_profile_pietaeta[idx]*ueta));
-            temp_profile_pitautau[idx] = (1./utau
-                *(  temp_profile_pitaux[idx]*ux
-                  + temp_profile_pitauy[idx]*uy
-                  + temp_profile_pitaueta[idx]*ueta));
-            if (ix == 0 && iy == 0) {
-                DATA.x_size = -x_0*2;
-                DATA.y_size = -y_0*2;
-                if (omp_get_thread_num() == 0) {
+                utau = temp_profile_utau[idx];
+                temp_profile_pietaeta[idx] = (
+                    (2.*(  ux*uy*temp_profile_pixy[idx]
+                        + ux*ueta*temp_profile_pixeta[idx]
+                        + uy*ueta*temp_profile_piyeta[idx])
+                    - (utau*utau - ux*ux)*temp_profile_pixx[idx]
+                    - (utau*utau - uy*uy)*temp_profile_piyy[idx])
+                    /(utau*utau - ueta*ueta));
+                temp_profile_pitaux  [idx] = (1./utau
+                    *(  temp_profile_pixx[idx]*ux
+                    + temp_profile_pixy[idx]*uy
+                    + temp_profile_pixeta[idx]*ueta));
+                temp_profile_pitauy  [idx] = (1./utau
+                    *(  temp_profile_pixy[idx]*ux
+                    + temp_profile_piyy[idx]*uy
+                    + temp_profile_piyeta[idx]*ueta));
+                temp_profile_pitaueta[idx] = (1./utau
+                    *(  temp_profile_pixeta[idx]*ux
+                    + temp_profile_piyeta[idx]*uy
+                    + temp_profile_pietaeta[idx]*ueta));
+                temp_profile_pitautau[idx] = (1./utau
+                    *(  temp_profile_pitaux[idx]*ux
+                    + temp_profile_pitauy[idx]*uy
+                    + temp_profile_pitaueta[idx]*ueta));
+                if (ix == 0 && iy == 0 && ieta == 0) {
+                    DATA.x_size = -x*2;
+                    DATA.y_size = -y*2;
+                    DATA.eta_size = -eta*2;
                     music_message << "eta_size=" << DATA.eta_size
-                                  << ", x_size=" << DATA.x_size
-                                  << ", y_size=" << DATA.y_size;
+                                    << ", x_size=" << DATA.x_size
+                                    << ", y_size=" << DATA.y_size;
                     music_message.flush("info");
                 }
             }
@@ -825,30 +835,21 @@ void Init::initial_IPGlasma_XY_with_pi_3D(SCGrid &arena_prev,
     }
     profile.close();
 
-    #pragma omp parallel for
-    for (int ieta = 0; ieta < arena_current.nEta(); ieta++) {
+    int entropy_flag = DATA.initializeEntropy;
 
-        double eta = (DATA.delta_eta)*(ieta) - (DATA.eta_size)/2.0;
-
-        double eta_envelop_ed = eta_profile_plateau(eta, DATA.eta_flat/2.0,
-                                                    DATA.eta_fall_off);
-
-        int entropy_flag = DATA.initializeEntropy;
+    for (int ieta = 0; ieta < neta; ieta++) {
         for (int ix = 0; ix < nx; ix++) {
             for (int iy = 0; iy< ny; iy++) {
-                int idx = iy + ix*ny;
+                int idx = iy + ix*ny + ieta*ny*nx;
                 double rhob = 0.0;
                 double epsilon = 0.0;
                 if (entropy_flag == 0) {
-                    epsilon = (temp_profile_ed[idx]*eta_envelop_ed
-                               *DATA.sFactor/hbarc);  // 1/fm^4
+                    epsilon = (temp_profile_ed[idx]*DATA.sFactor/hbarc);  // 1/fm^4
                 } else {
-                    double local_sd = (temp_profile_ed[idx]*DATA.sFactor
-                                       *eta_envelop_ed);
+                    double local_sd = (temp_profile_ed[idx]*DATA.sFactor);
                     epsilon = eos.get_s2e(local_sd, rhob);
                 }
-                if (epsilon < 0.00000000001)
-                    epsilon = 0.00000000001;
+                epsilon = std::max(Util::small_eps, epsilon);
 
                 arena_current(ix, iy, ieta).epsilon = epsilon;
                 arena_current(ix, iy, ieta).rhob = rhob;
@@ -857,7 +858,7 @@ void Init::initial_IPGlasma_XY_with_pi_3D(SCGrid &arena_prev,
                 arena_current(ix, iy, ieta).u[1] = temp_profile_ux[idx];
                 arena_current(ix, iy, ieta).u[2] = temp_profile_uy[idx];
                 arena_current(ix, iy, ieta).u[3] = temp_profile_ueta[idx];
-                
+
                 double pressure = eos.get_pressure(epsilon, rhob);
                 arena_current(ix, iy, ieta).pi_b = epsilon/3. - pressure;
                 arena_current(ix, iy, ieta).Wmunu[0] = temp_profile_pitautau[idx];
