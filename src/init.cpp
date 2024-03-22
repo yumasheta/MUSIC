@@ -107,7 +107,7 @@ void Init::InitArena(SCGrid &arena_prev, SCGrid &arena_current,
         music_message << "deta=" << DATA.delta_eta << ", dx=" << DATA.delta_x
                       << ", dy=" << DATA.delta_y;
         music_message.flush("info");
-    } else if (DATA.Initial_profile == 93) {
+    } else if (DATA.Initial_profile == 900) {
         music_message.info(DATA.initName);
         ifstream profile(DATA.initName.c_str());
         if (!profile.is_open()) {
@@ -255,7 +255,7 @@ void Init::InitTJb(SCGrid &arena_prev, SCGrid &arena_current) {
         for (int ieta = 0; ieta < arena_current.nEta(); ieta++) {
             initial_IPGlasma_XY_with_pi(ieta, arena_prev, arena_current);
         }
-    } else if (DATA.Initial_profile == 93) {
+    } else if (DATA.Initial_profile == 900) {
         // read in the profile from file
         // - IPGlasma initial conditions with initial flow
         // and initial shear viscous tensor in 3D (eta_s, x, y)
@@ -263,7 +263,7 @@ void Init::InitTJb(SCGrid &arena_prev, SCGrid &arena_current) {
         music_message << "file name used: " << DATA.initName;
         music_message.flush("info");
 
-        initial_IPGlasma_XY_with_pi_3D(arena_prev, arena_current);
+        initial_EtaXY_eps_u_pi(arena_prev, arena_current);
     } else if (DATA.Initial_profile == 11 || DATA.Initial_profile == 111) {
         // read in the transverse profile from file with finite rho_B
         // the initial entropy and net baryon density profile are
@@ -741,9 +741,9 @@ void Init::initial_IPGlasma_XY_with_pi(int ieta, SCGrid &arena_prev,
     }
 }
 
-void Init::initial_IPGlasma_XY_with_pi_3D(SCGrid &arena_prev,
+void Init::initial_EtaXY_eps_u_pi(SCGrid &arena_prev,
                                        SCGrid &arena_current) {
-    // Initial_profile == 93 : full T^\mu\nu
+    // Initial_profile == 900 :
     // full T^\mu\nu via eps_LRF, u^mu, pi^munu
     // lines ordered in (eta, x, y)
 
