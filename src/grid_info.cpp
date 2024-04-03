@@ -237,6 +237,9 @@ void Cell_info::OutputEvolutionDataXYEta(SCGrid &arena, double tau) {
                         if (DATA.turn_on_bulk) {
                             fprintf(out_file_bulkpi_xyeta,"%e %e %e\n", bulk_Pi, enthropy, cs2_local);
                         }
+                        if (DATA.turn_on_diff) {
+                            fprintf(out_file_q_xyeta, "%e %e %e %e %e\n", common_term_q, qtau, qx, qy, qeta);
+                        }
                     }
                 } else {
                     float array[] = {static_cast<float>(T_local*hbarc),
