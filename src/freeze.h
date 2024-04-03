@@ -121,6 +121,7 @@ class Freeze{
  private:
     bool surface_in_binary;
     bool boost_invariant;
+    int FOsize;
     int n_eta_s_integral;
     double *eta_s_inte_array, *eta_s_inte_weight;
     double *cosh_eta_s_inte, *sinh_eta_s_inte;

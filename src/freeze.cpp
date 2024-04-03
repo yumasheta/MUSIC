@@ -18,6 +18,7 @@ Freeze::Freeze(InitData* DATA_in) {
 
     DATA_ptr = DATA_in;
     surface_in_binary = DATA_ptr->freeze_surface_in_binary;
+    FOsize = 34 + DATA_ptr->output_vorticity*(24 + 14);
 
     // for final particle spectra and flow analysis, define the list
     // of charged hadrons that have a long enough lifetime to reach
@@ -517,6 +518,9 @@ void Freeze::ReadFreezeOutSurface(InitData *DATA) {
                 surfdat.read((char*)&temp, sizeof(float));
                 array[ii] = temp;
             }
+            // if there is more data in each line, skip it
+            surfdat.seekg((FOsize - 34) *sizeof(float), ifstream::cur);
+
             temp_cell.x[0] = array[0];
             temp_cell.x[1] = array[1];
             temp_cell.x[2] = array[2];
@@ -629,7 +633,7 @@ int Freeze::get_number_of_lines_of_binary_surface_file(string filename) {
         surface_file.read((char*) &temp, sizeof(float));
         count++;
     }
-    int counted_line = count/34;
+    int counted_line = count/FOsize;
     surface_file.close();
     return(counted_line);
 }
