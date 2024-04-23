@@ -78,7 +78,7 @@ void Init::InitArena(SCGrid &arena_prev, SCGrid &arena_current,
                       << ", dy=" << DATA.delta_y;
         music_message.flush("info");
     } else if (   DATA.Initial_profile == 9 || DATA.Initial_profile == 91
-               || DATA.Initial_profile == 92) {
+               || DATA.Initial_profile == 92 || DATA.Initial_profile == 93) {
         music_message.info(DATA.initName);
         ifstream profile(DATA.initName.c_str());
         if (!profile.is_open()) {
@@ -243,7 +243,7 @@ void Init::InitTJb(SCGrid &arena_prev, SCGrid &arena_current) {
             initial_IPGlasma_XY(ieta, arena_prev, arena_current);
         }
     } else if (   DATA.Initial_profile == 9 || DATA.Initial_profile == 91
-               || DATA.Initial_profile == 92) {
+               || DATA.Initial_profile == 92 || DATA.Initial_profile == 93) {
         // read in the profile from file
         // - IPGlasma initial conditions with initial flow
         // and initial shear viscous tensor
@@ -598,6 +598,7 @@ void Init::initial_IPGlasma_XY_with_pi(int ieta, SCGrid &arena_prev,
     // Initial_profile == 9 : full T^\mu\nu
     // Initial_profile == 91: e and u^\mu
     // Initial_profile == 92: e only
+    // Initial_profile == 93: e, u^\mu, and pi^\mu\nu, no bulk Pi
     double tau0 = DATA.tau0;
     ifstream profile(DATA.initName.c_str());
 
@@ -721,10 +722,7 @@ void Init::initial_IPGlasma_XY_with_pi(int ieta, SCGrid &arena_prev,
                 arena_current(ix, iy, ieta).u[3] = temp_profile_ueta[idx];
             }
 
-            if (DATA.Initial_profile == 9) {
-                double pressure = eos.get_pressure(epsilon, rhob);
-                arena_current(ix, iy, ieta).pi_b = epsilon/3. - pressure;
-
+            if (DATA.Initial_profile == 9 || DATA.Initial_profile == 93) {
                 arena_current(ix, iy, ieta).Wmunu[0] = temp_profile_pitautau[idx];
                 arena_current(ix, iy, ieta).Wmunu[1] = temp_profile_pitaux[idx];
                 arena_current(ix, iy, ieta).Wmunu[2] = temp_profile_pitauy[idx];
@@ -735,6 +733,11 @@ void Init::initial_IPGlasma_XY_with_pi(int ieta, SCGrid &arena_prev,
                 arena_current(ix, iy, ieta).Wmunu[7] = temp_profile_piyy[idx];
                 arena_current(ix, iy, ieta).Wmunu[8] = temp_profile_piyeta[idx];
                 arena_current(ix, iy, ieta).Wmunu[9] = temp_profile_pietaeta[idx];
+
+                if (DATA.Initial_profile == 9) {
+                    double pressure = eos.get_pressure(epsilon, rhob);
+                    arena_current(ix, iy, ieta).pi_b = epsilon/3. - pressure;
+                }
             }
             arena_prev(ix, iy, ieta) = arena_current(ix, iy, ieta);
         }
